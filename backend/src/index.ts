@@ -1,6 +1,8 @@
 import { serve } from '@hono/node-server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
+import { mockDashboardData } from './data/mockData.js';
+import { DashboardDataSchema } from './schemas.js';
 
 const app = new Hono();
 
@@ -21,6 +23,18 @@ app.get('/', (c) => {
 // API routes
 app.get('/api/health', (c) => {
   return c.json({ status: 'ok', message: 'Backend is running!' });
+});
+
+// Main dashboard endpoint for the mobile app with Zod validation
+app.get('/api/dashboard', (c) => {
+  try {
+    // Validate the data before sending (ensures API contract)
+    const validatedData = DashboardDataSchema.parse(mockDashboardData);
+    return c.json(validatedData);
+  } catch (error) {
+    console.error('Data validation failed:', error);
+    return c.json({ error: 'Invalid dashboard data' }, 500);
+  }
 });
 
 serve(
