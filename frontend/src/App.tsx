@@ -1,69 +1,69 @@
-import { useState, useEffect } from 'react';
-import reactLogo from './assets/react.svg';
-import viteLogo from '/vite.svg';
 import './App.css';
-
-interface BackendStatus {
-  status: string;
-  message: string;
-}
+import { useDashboardData } from './api/dashboard';
 
 function App() {
-  const [count, setCount] = useState(0);
-  const [backendStatus, setBackendStatus] = useState<BackendStatus | null>(
-    null
-  );
-
-  // Test connection to backend
-  useEffect(() => {
-    fetch('/api/health')
-      .then((res) => res.json())
-      .then((data: BackendStatus) => setBackendStatus(data))
-      .catch((err) =>
-        setBackendStatus({ status: 'error', message: err.message })
-      );
-  }, []);
+  const { data: dashboardData, isLoading, error } = useDashboardData();
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React + TS</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-        {backendStatus && (
-          <div
-            style={{
-              marginTop: '1rem',
-              padding: '1rem',
-              border: '1px solid #ccc',
-              borderColor:
-                backendStatus.status === 'ok' ? '#4caf50' : '#f44336',
-            }}
-          >
-            <h3>Backend Status:</h3>
+    <div className="app">
+      <h1>Qred Dashboard</h1>
+
+      {/* Dashboard Data Display */}
+      <div
+        style={{
+          marginTop: '2rem',
+          padding: '1rem',
+          border: '1px solid #ccc',
+          borderRadius: '8px',
+        }}
+      >
+        <h2>Dashboard Data</h2>
+        {isLoading && <p>Loading dashboard...</p>}
+        {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
+        {dashboardData && (
+          <div style={{ textAlign: 'left' }}>
             <p>
-              Status: <strong>{backendStatus.status}</strong>
+              <strong>Company:</strong> {dashboardData.selectedCompany.name}
             </p>
-            <p>Message: {backendStatus.message}</p>
+            <p>
+              <strong>Invoice Due:</strong>{' '}
+              {dashboardData.invoiceDue ? 'Yes' : 'No'}
+            </p>
+            <p>
+              <strong>Card Activated:</strong>{' '}
+              {dashboardData.cardActivated ? 'Yes' : 'No'}
+            </p>
+            <p>
+              <strong>Spending:</strong>{' '}
+              {dashboardData.spending.current.toLocaleString()} /{' '}
+              {dashboardData.spending.limit.toLocaleString()}{' '}
+              {dashboardData.spending.currency}
+            </p>
+            <p>
+              <strong>Recent Transactions:</strong>{' '}
+              {dashboardData.recentTransactions.length} shown,{' '}
+              {dashboardData.totalTransactions} total
+            </p>
+            <details>
+              <summary>Raw API Response</summary>
+              <pre
+                style={{
+                  fontSize: '12px',
+                  textAlign: 'left',
+                  overflow: 'auto',
+                  color: 'black',
+                  background: '#f5f5f5',
+                  padding: '1rem',
+                  borderRadius: '4px',
+                }}
+              >
+                {JSON.stringify(dashboardData, null, 2)}
+              </pre>
+            </details>
           </div>
         )}
       </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </div>
   );
 }
 

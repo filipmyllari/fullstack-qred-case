@@ -1,6 +1,5 @@
-import type { Company, Transaction, DashboardData } from '../schemas.js';
+import type { DashboardData } from '../schemas.js';
 
-// Simple mock data matching the mobile app mockup
 export const mockDashboardData: DashboardData = {
   companies: [
     { id: '1', name: 'Company AB' },
@@ -34,6 +33,6 @@ export const mockDashboardData: DashboardData = {
       date: '2024-01-13',
     },
   ],
-  totalTransactions: 57, // 3 visible + 54 more as shown in mockup
+  totalTransactions: 57,
   cardActivated: false,
 };
