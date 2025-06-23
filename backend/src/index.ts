@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import {
   mockDashboardData,
+  getDashboardData,
   getPaginatedTransactions,
 } from './data/mockData.js';
 import {
@@ -33,11 +34,38 @@ app.get('/api/health', (c) => {
 
 app.get('/api/dashboard', (c) => {
   try {
-    const validatedData = DashboardDataSchema.parse(mockDashboardData);
+    const companyId = c.req.query('companyId') || '1';
+    const dashboardData = getDashboardData(companyId);
+    const validatedData = DashboardDataSchema.parse(dashboardData);
     return c.json(validatedData);
   } catch (error) {
     console.error('Dashboard validation failed:', error);
+    if (error instanceof Error && error.message.includes('not found')) {
+      return c.json({ error: 'Company not found' }, 404);
+    }
     return c.json({ error: 'Invalid dashboard data' }, 500);
+  }
+});
+
+app.post('/api/company/select', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { companyId } = body;
+
+    if (!companyId) {
+      return c.json({ error: 'Company ID is required' }, 400);
+    }
+
+    const dashboardData = getDashboardData(companyId);
+    const validatedData = DashboardDataSchema.parse(dashboardData);
+
+    return c.json(validatedData);
+  } catch (error) {
+    console.error('Company selection failed:', error);
+    if (error instanceof Error && error.message.includes('not found')) {
+      return c.json({ error: 'Company not found' }, 404);
+    }
+    return c.json({ error: 'Failed to select company' }, 500);
   }
 });
 
@@ -87,7 +115,8 @@ serve(
   (info) => {
     console.log(`Server is running on http://localhost:${info.port}`);
     console.log('API Endpoints:');
-    console.log('GET  /api/dashboard');
+    console.log('GET  /api/dashboard?companyId=1');
+    console.log('POST /api/company/select');
     console.log('GET  /api/transactions?limit=20&offset=0');
     console.log('POST /api/card/activate');
   }

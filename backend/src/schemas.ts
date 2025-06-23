@@ -33,6 +33,10 @@ export const DashboardDataSchema = z.object({
   invoiceDue: z.boolean(),
   spending: SpendingInfoSchema,
   recentTransactions: z.array(TransactionSchema),
+  transactionSummary: z.object({
+    totalTransactions: z.number(),
+    remainingCount: z.number(),
+  }),
 });
 
 export const PaginatedTransactionsSchema = z.object({
