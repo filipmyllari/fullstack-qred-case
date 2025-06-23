@@ -1,67 +1,143 @@
+import { ChevronRight } from 'lucide-react';
 import './App.css';
-import { useDashboardData } from './api/dashboard';
+import { useDashboardData, useCompanySelection } from './api/dashboard';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './components/ui/select';
+import { Button } from './components/ui/button';
 
 function App() {
   const { data: dashboardData, isLoading, error } = useDashboardData();
+  const { mutate: selectCompany, isPending: isSelectingCompany } =
+    useCompanySelection();
+
+  const handleCompanySelect = (companyId: string) => {
+    if (dashboardData?.selectedCompany.id !== companyId) {
+      selectCompany(companyId);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="bg-white w-[428px] mx-auto rounded-2xl px-4 py-8 gap-10 flex flex-col items-center justify-center min-h-[600px]">
+        <div className="text-gray-700">Loading...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white w-[428px] mx-auto rounded-2xl px-4 py-8 gap-10 flex flex-col items-center justify-center min-h-[600px]">
+        <div className="text-red-600">Error loading dashboard data</div>
+      </div>
+    );
+  }
+
+  if (!dashboardData) {
+    return null;
+  }
 
   return (
-    <div className="app">
-      <h1>Qred Dashboard</h1>
-
-      {/* Dashboard Data Display */}
-      <div
-        style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          border: '1px solid #ccc',
-          borderRadius: '8px',
-        }}
-      >
-        <h2>Dashboard Data</h2>
-        {isLoading && <p>Loading dashboard...</p>}
-        {error && <p style={{ color: 'red' }}>Error: {error.message}</p>}
-        {dashboardData && (
-          <div style={{ textAlign: 'left' }}>
-            <p>
-              <strong>Company:</strong> {dashboardData.selectedCompany.name}
-            </p>
-            <p>
-              <strong>Invoice Due:</strong>{' '}
-              {dashboardData.invoiceDue ? 'Yes' : 'No'}
-            </p>
-            <p>
-              <strong>Card Activated:</strong>{' '}
-              {dashboardData.cardActivated ? 'Yes' : 'No'}
-            </p>
-            <p>
-              <strong>Spending:</strong>{' '}
-              {dashboardData.spending.current.toLocaleString()} /{' '}
-              {dashboardData.spending.limit.toLocaleString()}{' '}
-              {dashboardData.spending.currency}
-            </p>
-            <p>
-              <strong>Recent Transactions:</strong>{' '}
-              {dashboardData.recentTransactions.length} shown,{' '}
-              {dashboardData.totalTransactions} total
-            </p>
-            <details>
-              <summary>Raw API Response</summary>
-              <pre
-                style={{
-                  fontSize: '12px',
-                  textAlign: 'left',
-                  overflow: 'auto',
-                  color: 'black',
-                  background: '#f5f5f5',
-                  padding: '1rem',
-                  borderRadius: '4px',
-                }}
+    <div className="bg-white w-[428px] mx-auto rounded-2xl px-4 py-8 gap-10 flex flex-col">
+      <div className="flex flex-row justify-between">
+        <div className="bg-gray-200 px-6 py-4">LOGO</div>
+        <div className="bg-gray-200 px-1 py-4">MENU</div>
+      </div>
+      <div>
+        <Select
+          value={dashboardData.selectedCompany.id}
+          onValueChange={handleCompanySelect}
+          disabled={isSelectingCompany}
+        >
+          <SelectTrigger className="bg-gray-200 rounded-none border-none h-auto px-4 py-6 text-base text-gray-700 hover:text-gray-900 w-full">
+            <SelectValue>{dashboardData.selectedCompany.name}</SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {dashboardData.companies.map((company) => (
+              <SelectItem
+                key={company.id}
+                value={company.id}
+                className="text-base"
               >
-                {JSON.stringify(dashboardData, null, 2)}
-              </pre>
-            </details>
+                {company.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col relative">
+        <div className="bg-gray-200 px-4 py-4 w-full h-[180px] items-center justify-center flex flex-col rounded-2xl relative">
+          <div className="flex flex-row items-center justify-center relative w-full">
+            {dashboardData.card.imageUrl ? (
+              <img
+                src={dashboardData.card.imageUrl}
+                alt="Credit Card"
+                className="w-full h-full object-cover rounded-xl"
+              />
+            ) : (
+              <p className="text-center">Card Image</p>
+            )}
+            <ChevronRight className="w-8 h-8 absolute right-0" />
+          </div>
+        </div>
+        {dashboardData.invoiceDue && (
+          <div className="bg-gray-200 px-6 py-4 flex flex-row items-center justify-between w-[170px] absolute top-[-24px] left-1/2 transform -translate-x-1/2 shadow-lg">
+            <p className="text-center">Invoice due</p>
+            <ChevronRight className="w-8 h-8" />
           </div>
         )}
+      </div>
+      <div>
+        <div className="bg-gray-200 px-4 py-4 w-full h-[180px] flex flex-col justify-between">
+          <div className="self-start">
+            <p>Remaining Spend</p>
+          </div>
+          <div className="self-center flex flex-row items-center justify-center relative w-full">
+            <p>
+              {dashboardData.spending.current}/{dashboardData.spending.limit}{' '}
+              {dashboardData.spending.currency}
+            </p>
+            <ChevronRight className="w-8 h-8 absolute right-0" />
+          </div>
+          <div className="self-end">
+            <p>Based on your set limit</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div className="py-4 w-full">
+          <div className="bg-gray-200 py-2 px-4">
+            <h2 className="flex flex-row items-center">Latest transactions</h2>
+          </div>
+          <div className="space-y-3 bg-gray-300 px-4 py-2">
+            {dashboardData.recentTransactions.map((transaction) => (
+              <div
+                key={transaction.id}
+                className="flex flex-row justify-between items-center py-2"
+              >
+                <p className="text-gray-700">{transaction.description}</p>
+                <p className="text-gray-700">{transaction.dataPoints}</p>
+              </div>
+            ))}
+          </div>
+          <div className="bg-white px-4 py-2 flex flex-row justify-center items-center border border-black relative">
+            <p className="text-gray-700">
+              {dashboardData.transactionSummary.remainingCount} more items in
+              transaction view
+            </p>
+            <ChevronRight className="w-4 h-4 absolute right-4" />
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-2">
+        <Button className="rounded-none">
+          {dashboardData.card.isActive ? 'Active Card' : 'Activate Card'}
+        </Button>
+        <Button className="rounded-none">Contact Qreds Support</Button>
       </div>
     </div>
   );

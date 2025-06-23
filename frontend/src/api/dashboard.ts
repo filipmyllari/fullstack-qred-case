@@ -1,21 +1,115 @@
-import { useQuery } from '@tanstack/react-query';
-import { DashboardDataSchema, type DashboardData } from '../types/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  DashboardDataSchema,
+  PaginatedTransactionsSchema,
+  CardActivationResponseSchema,
+  type DashboardData,
+  type PaginatedTransactions,
+  type CardActivationResponse,
+} from '../types/api';
 
-async function fetchDashboardData(): Promise<DashboardData> {
-  const response = await fetch('/api/dashboard');
+const API_BASE_URL = 'http://localhost:3000';
+
+async function fetchDashboardData(companyId?: string): Promise<DashboardData> {
+  const url = companyId
+    ? `${API_BASE_URL}/api/dashboard?companyId=${companyId}`
+    : `${API_BASE_URL}/api/dashboard`;
+
+  const response = await fetch(url);
 
   if (!response.ok) {
     throw new Error(`Failed to fetch dashboard: ${response.statusText}`);
   }
 
   const data = await response.json();
-
   return DashboardDataSchema.parse(data);
 }
 
-export function useDashboardData() {
+async function selectCompany(companyId: string): Promise<DashboardData> {
+  const response = await fetch(`${API_BASE_URL}/api/company/select`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ companyId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to select company: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return DashboardDataSchema.parse(data);
+}
+
+async function fetchTransactions(
+  limit: number = 20,
+  offset: number = 0
+): Promise<PaginatedTransactions> {
+  const response = await fetch(
+    `${API_BASE_URL}/api/transactions?limit=${limit}&offset=${offset}`
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch transactions: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return PaginatedTransactionsSchema.parse(data);
+}
+
+async function activateCard(): Promise<CardActivationResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/card/activate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to activate card: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return CardActivationResponseSchema.parse(data);
+}
+
+export function useDashboardData(companyId?: string) {
   return useQuery({
-    queryKey: ['dashboard'],
-    queryFn: fetchDashboardData,
+    queryKey: ['dashboard', companyId],
+    queryFn: () => fetchDashboardData(companyId),
+  });
+}
+
+export function useCompanySelection() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: selectCompany,
+    onSuccess: (data) => {
+      // Update the dashboard query cache with the new data
+      queryClient.setQueryData(['dashboard', data.selectedCompany.id], data);
+      // Also update the default dashboard query
+      queryClient.setQueryData(['dashboard', undefined], data);
+    },
+  });
+}
+
+export function useTransactions(limit: number = 20, offset: number = 0) {
+  return useQuery({
+    queryKey: ['transactions', limit, offset],
+    queryFn: () => fetchTransactions(limit, offset),
+  });
+}
+
+export function useCardActivation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: activateCard,
+    onSuccess: () => {
+      // Invalidate dashboard query to refresh card status
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+    },
   });
 }
