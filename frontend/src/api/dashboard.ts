@@ -117,10 +117,15 @@ export function useCompanySelection() {
   return useMutation({
     mutationFn: selectCompany,
     onSuccess: (data) => {
-      // Update the dashboard query cache with the new data
+      // Set the specific company data in cache
       queryClient.setQueryData(['dashboard', data.selectedCompany.id], data);
-      // Also update the default dashboard query
-      queryClient.setQueryData(['dashboard', undefined], data);
+      // Remove the default/undefined query to force refetch with company ID
+      queryClient.removeQueries({ queryKey: ['dashboard', undefined] });
+      // Invalidate other company queries to ensure fresh data
+      queryClient.invalidateQueries({
+        queryKey: ['dashboard'],
+        predicate: (query) => query.queryKey[1] !== data.selectedCompany.id,
+      });
     },
   });
 }
@@ -138,10 +143,8 @@ export function useCardActivation() {
   return useMutation({
     mutationFn: activateCard,
     onSuccess: (_, companyId) => {
-      // Invalidate dashboard queries to refresh card status
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      // Only invalidate the specific company's dashboard data
       queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', undefined] });
     },
   });
 }
@@ -152,10 +155,8 @@ export function useCardDeactivation() {
   return useMutation({
     mutationFn: deactivateCard,
     onSuccess: (_, companyId) => {
-      // Invalidate dashboard queries to refresh card status
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      // Only invalidate the specific company's dashboard data
       queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard', undefined] });
     },
   });
 }

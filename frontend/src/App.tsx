@@ -1,4 +1,5 @@
 import { ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import {
   useDashboardData,
@@ -16,7 +17,15 @@ import {
 import { Button } from './components/ui/button';
 
 function App() {
-  const { data: dashboardData, isLoading, error } = useDashboardData();
+  const [selectedCompanyId, setSelectedCompanyId] = useState<
+    string | undefined
+  >();
+
+  const {
+    data: dashboardData,
+    isLoading,
+    error,
+  } = useDashboardData(selectedCompanyId);
   const { mutate: selectCompany, isPending: isSelectingCompany } =
     useCompanySelection();
   const { mutate: activateCard, isPending: isActivating } = useCardActivation();
@@ -25,22 +34,27 @@ function App() {
 
   const isUpdatingCard = isActivating || isDeactivating;
 
+  // Update selected company ID when dashboard data changes
+  useEffect(() => {
+    if (dashboardData?.selectedCompany.id && !selectedCompanyId) {
+      setSelectedCompanyId(dashboardData.selectedCompany.id);
+    }
+  }, [dashboardData?.selectedCompany.id, selectedCompanyId]);
+
   const handleCompanySelect = (companyId: string) => {
-    if (dashboardData?.selectedCompany.id !== companyId) {
+    if (selectedCompanyId !== companyId) {
+      setSelectedCompanyId(companyId);
       selectCompany(companyId);
     }
   };
 
   const handleCardAction = () => {
-    if (!dashboardData?.selectedCompany.id) return;
+    if (!selectedCompanyId) return;
 
-    const companyId = dashboardData.selectedCompany.id;
-
-    if (dashboardData.card.isActive) {
-      // TODO: In production, add confirmation dialog for deactivation
-      deactivateCard(companyId);
+    if (dashboardData?.card.isActive) {
+      deactivateCard(selectedCompanyId);
     } else {
-      activateCard(companyId);
+      activateCard(selectedCompanyId);
     }
   };
 
@@ -72,7 +86,7 @@ function App() {
       </div>
       <div>
         <Select
-          value={dashboardData.selectedCompany.id}
+          value={selectedCompanyId}
           onValueChange={handleCompanySelect}
           disabled={isSelectingCompany}
         >
