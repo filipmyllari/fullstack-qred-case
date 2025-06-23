@@ -20,6 +20,7 @@ function App() {
   const [selectedCompanyId, setSelectedCompanyId] = useState<
     string | undefined
   >();
+  const [imageError, setImageError] = useState<boolean>(false);
 
   const {
     data: dashboardData,
@@ -40,6 +41,11 @@ function App() {
       setSelectedCompanyId(dashboardData.selectedCompany.id);
     }
   }, [dashboardData?.selectedCompany.id, selectedCompanyId]);
+
+  // Reset image error when company changes
+  useEffect(() => {
+    setImageError(false);
+  }, [selectedCompanyId, dashboardData?.card.imageUrl]);
 
   const handleCompanySelect = (companyId: string) => {
     if (selectedCompanyId !== companyId) {
@@ -109,14 +115,15 @@ function App() {
       <div className="flex flex-col relative">
         <div className="bg-gray-200 px-4 py-4 w-full h-[180px] items-center justify-center flex flex-col rounded-2xl relative">
           <div className="flex flex-row items-center justify-center relative w-full">
-            {dashboardData.card.imageUrl ? (
+            {dashboardData.card.imageUrl && !imageError ? (
               <img
                 src={dashboardData.card.imageUrl}
                 alt="Credit Card"
                 className="w-full h-full object-cover rounded-xl"
+                onError={() => setImageError(true)}
               />
             ) : (
-              <p className="text-center">Card Image</p>
+              <p className="text-center">Credit Card</p>
             )}
             <ChevronRight className="w-8 h-8 absolute right-0" />
           </div>
