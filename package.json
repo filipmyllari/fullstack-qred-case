@@ -2,13 +2,16 @@
   "name": "fullstack-qred-case",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "dev:backend": "cd backend && npm run dev",
-    "dev:frontend": "cd frontend && npm run dev",
-    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
-    "build:shared": "cd shared && npm run build",
-    "build:backend": "cd backend && npm run build",
-    "build:frontend": "cd frontend && npm run build"
+    "dev": "concurrently \"pnpm --filter=backend dev\" \"pnpm --filter=frontend dev\"",
+    "dev:backend": "pnpm --filter=backend dev",
+    "dev:frontend": "pnpm --filter=frontend dev",
+    "build": "pnpm --filter=shared build && pnpm --filter=backend build && pnpm --filter=frontend build",
+    "build:shared": "pnpm --filter=shared build",
+    "build:backend": "pnpm --filter=backend build",
+    "build:frontend": "pnpm --filter=frontend build",
+    "test": "pnpm -r test",
+    "test:run": "pnpm -r test:run",
+    "test:coverage": "pnpm -r --filter=shared --filter=backend test:coverage"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

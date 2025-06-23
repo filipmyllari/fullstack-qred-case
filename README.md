@@ -6,7 +6,7 @@ A mobile dashboard application built with React frontend and Node.js backend, fe
 
 ```
 ├── frontend/          # React + TypeScript frontend
-├── backend/           # Node.js + Express API
+├── backend/           # Node.js + Hono API
 ├── shared/            # Shared TypeScript schemas
 └── docker-compose.yml # PostgreSQL database
 ```
@@ -57,6 +57,32 @@ The shared package contains TypeScript type definitions and Zod schemas used by 
 - `pnpm run clean` - Remove compiled files
 
 **Note:** The shared package must be built before running the frontend or backend applications as they depend on the compiled types.
+
+## Testing
+
+All packages include test suites:
+
+### Frontend Tests
+
+- Run with: `pnpm --filter=frontend test`
+
+### Backend Tests
+
+- Run with: `pnpm --filter=backend test`
+
+### Shared Package Tests
+
+- Run with: `pnpm --filter=shared test`
+
+### Running All Tests
+
+```bash
+pnpm test:run
+
+pnpm test
+
+pnpm test:coverage
+```
 
 ## Environment Configuration
 
