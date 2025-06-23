@@ -117,17 +117,25 @@ export class DatabaseService {
     };
   }
 
-  async activateCard(companyId: string): Promise<boolean> {
+  async updateCardStatus(
+    companyId: string,
+    isActive: boolean
+  ): Promise<boolean> {
     try {
       await prisma.card.updateMany({
         where: { companyId },
-        data: { isActive: true },
+        data: { isActive },
       });
       return true;
     } catch (error) {
-      console.error('Failed to activate card:', error);
+      console.error('Failed to update card status:', error);
       return false;
     }
+  }
+
+  // Keep backward compatibility
+  async activateCard(companyId: string): Promise<boolean> {
+    return this.updateCardStatus(companyId, true);
   }
 
   async disconnect(): Promise<void> {

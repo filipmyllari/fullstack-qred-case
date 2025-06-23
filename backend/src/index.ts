@@ -98,9 +98,7 @@ app.post('/api/card/activate', async (c) => {
       return c.json({ error: 'Company ID is required' }, 400);
     }
 
-    await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API delay
-
-    const success = await db.activateCard(companyId);
+    const success = await db.updateCardStatus(companyId, true);
 
     const response = {
       success,
@@ -117,6 +115,40 @@ app.post('/api/card/activate', async (c) => {
       {
         success: false,
         message: 'Failed to activate card',
+      },
+      500
+    );
+  }
+});
+
+app.post('/api/card/deactivate', async (c) => {
+  try {
+    const body = await c.req.json();
+    const { companyId } = body;
+
+    if (!companyId) {
+      return c.json({ error: 'Company ID is required' }, 400);
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API delay
+
+    const success = await db.updateCardStatus(companyId, false);
+
+    const response = {
+      success,
+      message: success
+        ? 'Card deactivated successfully'
+        : 'Failed to deactivate card',
+    };
+
+    const validatedResponse = CardActivationResponseSchema.parse(response);
+    return c.json(validatedResponse, success ? 200 : 500);
+  } catch (error) {
+    console.error('Card deactivation failed:', error);
+    return c.json(
+      {
+        success: false,
+        message: 'Failed to deactivate card',
       },
       500
     );
@@ -147,7 +179,8 @@ serve(
     console.log('GET  /api/dashboard?companyId=<id>');
     console.log('POST /api/company/select');
     console.log('GET  /api/transactions?companyId=<id>&limit=20&offset=0');
-    console.log('POST /api/card/activate');
+    console.log('POST /api/card/activate (supports isActive: true/false)');
+    console.log('POST /api/card/deactivate (supports isActive: true/false)');
     console.log('Database: PostgreSQL with Prisma ORM');
   }
 );

@@ -1,6 +1,11 @@
 import { ChevronRight } from 'lucide-react';
 import './App.css';
-import { useDashboardData, useCompanySelection } from './api/dashboard';
+import {
+  useDashboardData,
+  useCompanySelection,
+  useCardActivation,
+  useCardDeactivation,
+} from './api/dashboard';
 import {
   Select,
   SelectContent,
@@ -14,10 +19,28 @@ function App() {
   const { data: dashboardData, isLoading, error } = useDashboardData();
   const { mutate: selectCompany, isPending: isSelectingCompany } =
     useCompanySelection();
+  const { mutate: activateCard, isPending: isActivating } = useCardActivation();
+  const { mutate: deactivateCard, isPending: isDeactivating } =
+    useCardDeactivation();
+
+  const isUpdatingCard = isActivating || isDeactivating;
 
   const handleCompanySelect = (companyId: string) => {
     if (dashboardData?.selectedCompany.id !== companyId) {
       selectCompany(companyId);
+    }
+  };
+
+  const handleCardAction = () => {
+    if (!dashboardData?.selectedCompany.id) return;
+
+    const companyId = dashboardData.selectedCompany.id;
+
+    if (dashboardData.card.isActive) {
+      // TODO: In production, add confirmation dialog for deactivation
+      deactivateCard(companyId);
+    } else {
+      activateCard(companyId);
     }
   };
 
@@ -134,8 +157,16 @@ function App() {
         </div>
       </div>
       <div className="flex flex-col gap-2">
-        <Button className="rounded-none">
-          {dashboardData.card.isActive ? 'Active Card' : 'Activate Card'}
+        <Button
+          className="rounded-none"
+          onClick={handleCardAction}
+          disabled={isUpdatingCard}
+        >
+          {isUpdatingCard
+            ? 'Updating...'
+            : dashboardData.card.isActive
+            ? 'Deactivate Card'
+            : 'Activate Card'}
         </Button>
         <Button className="rounded-none">Contact Qreds Support</Button>
       </div>

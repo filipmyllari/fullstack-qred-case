@@ -58,12 +58,15 @@ async function fetchTransactions(
   return PaginatedTransactionsSchema.parse(data);
 }
 
-async function activateCard(): Promise<CardActivationResponse> {
+async function activateCard(
+  companyId: string
+): Promise<CardActivationResponse> {
   const response = await fetch(`${API_BASE_URL}/api/card/activate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
+    body: JSON.stringify({ companyId }),
   });
 
   if (!response.ok) {
@@ -72,6 +75,33 @@ async function activateCard(): Promise<CardActivationResponse> {
 
   const data = await response.json();
   return CardActivationResponseSchema.parse(data);
+}
+
+async function deactivateCard(
+  companyId: string
+): Promise<CardActivationResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/card/deactivate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ companyId }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to deactivate card: ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  return CardActivationResponseSchema.parse(data);
+}
+
+// Generic function for both actions
+async function updateCardStatus(
+  companyId: string,
+  isActive: boolean
+): Promise<CardActivationResponse> {
+  return isActive ? activateCard(companyId) : deactivateCard(companyId);
 }
 
 export function useDashboardData(companyId?: string) {
@@ -107,9 +137,46 @@ export function useCardActivation() {
 
   return useMutation({
     mutationFn: activateCard,
-    onSuccess: () => {
-      // Invalidate dashboard query to refresh card status
+    onSuccess: (_, companyId) => {
+      // Invalidate dashboard queries to refresh card status
       queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', undefined] });
+    },
+  });
+}
+
+export function useCardDeactivation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deactivateCard,
+    onSuccess: (_, companyId) => {
+      // Invalidate dashboard queries to refresh card status
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', undefined] });
+    },
+  });
+}
+
+// Generic hook for both operations (can be used if toggle behavior is preferred)
+export function useCardStatusUpdate() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      companyId,
+      isActive,
+    }: {
+      companyId: string;
+      isActive: boolean;
+    }) => updateCardStatus(companyId, isActive),
+    onSuccess: (_, { companyId }) => {
+      // Invalidate dashboard queries to refresh card status
+      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard', undefined] });
     },
   });
 }
