@@ -1,12 +1,19 @@
 {
   "name": "fullstack-qred-case",
   "private": true,
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ],
   "scripts": {
-    "dev": "concurrently \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
-    "dev:frontend": "cd frontend && pnpm run dev",
-    "dev:backend": "cd backend && pnpm run dev",
-    "install:all": "pnpm install && cd frontend && pnpm install && cd ../backend && pnpm install",
-    "build": "cd backend && pnpm run build && cd ../frontend && pnpm run build"
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm run dev",
+    "build": "npm run build:shared && npm run build:backend && npm run build:frontend",
+    "build:shared": "cd shared && npm run build",
+    "build:backend": "cd backend && npm run build",
+    "build:frontend": "cd frontend && npm run build"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"
