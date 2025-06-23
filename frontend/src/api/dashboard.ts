@@ -6,7 +6,7 @@ import {
   type DashboardData,
   type PaginatedTransactions,
   type CardActivationResponse,
-} from '../types/api';
+} from '@qred/shared';
 
 const API_BASE_URL = 'http://localhost:3000';
 

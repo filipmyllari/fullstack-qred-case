@@ -6,7 +6,7 @@ import {
   DashboardDataSchema,
   PaginatedTransactionsSchema,
   CardActivationResponseSchema,
-} from './schemas.js';
+} from '@qred/shared';
 
 const app = new Hono();
 

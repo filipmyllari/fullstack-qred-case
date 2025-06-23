@@ -1,5 +1,5 @@
 import { PrismaClient } from '../generated/prisma/index.js';
-import type { DashboardData, PaginatedTransactions } from '../schemas.js';
+import type { DashboardData, PaginatedTransactions } from '@qred/shared';
 
 const prisma = new PrismaClient();
 
