@@ -8,7 +8,8 @@ import {
   type CardActivationResponse,
 } from '@qred/shared';
 
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 async function fetchDashboardData(companyId?: string): Promise<DashboardData> {
   const url = companyId
